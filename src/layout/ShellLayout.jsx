@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TAB_META, TAB_ORDER } from '../data/tabs.js';
 import { useUiStore } from '../store/uiStore.js';
 import { ObservabilityPage } from '../pages/ObservabilityPage.jsx';
+import { RationalePage } from '../pages/RationalePage.jsx';
 import { TrafficProtectionPage } from '../pages/TrafficProtectionPage.jsx';
 import { TransactionSimulatorPage } from '../pages/TransactionSimulatorPage.jsx';
 
@@ -9,6 +10,7 @@ const PAGE_BY_TAB = {
   transaction: TransactionSimulatorPage,
   observability: ObservabilityPage,
   traffic: TrafficProtectionPage,
+  rationale: RationalePage,
 };
 
 export function ShellLayout() {
@@ -47,6 +49,7 @@ export function ShellLayout() {
         <main className="app-main app-main--full">
           <AnimatePresence mode="wait">
             <motion.div
+              className="app-page-stage"
               key={activeTab}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}

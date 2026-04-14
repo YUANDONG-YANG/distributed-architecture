@@ -17,6 +17,12 @@
   --color-node-glow: rgba(56, 189, 248, 0.45);
   --color-edge-glow: rgba(56, 189, 248, 0.25);
 
+  /** Same hex as `src/data/flowPhaseColors.js` FLOW_PHASE_EDGE. */
+  --flow-edge-local: #38bdf8;
+  --flow-edge-dispatch: #a78bfa;
+  --flow-edge-async: #34d399;
+  --flow-edge-failure: #f87171;
+
   --color-status-idle: #64748b;
   --color-status-idle-glow: rgba(100, 116, 139, 0.35);
   --color-status-ok: #34d399;

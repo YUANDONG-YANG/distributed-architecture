@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import ReactFlow, { Background, MarkerType, useEdgesState, useNodesState } from 'reactflow';
 import { ArchitectureNode } from '../nodes/ArchitectureNode.jsx';
+import { FLOW_PHASE_EDGE } from '../../data/flowPhaseColors.js';
 import { TRANSACTION_EDGES, TRANSACTION_NODES } from '../../data/transactionFlowData.js';
 import { useTransactionSimulatorStore } from '../../store/transactionSimulatorStore.js';
 
@@ -22,17 +23,13 @@ function isRecoveryFlowEdge(edgeId, active, transactionStatus, branch, manualRep
 function edgeStroke(kind, active, dim, recoveryGlow) {
   if (recoveryGlow && active) return '#fbbf24';
   if (!active) return dim ? 'rgba(100,116,139,0.55)' : 'rgba(148,163,184,0.22)';
-  const colors = {
-    local: '#38bdf8',
-    dispatch: '#a78bfa',
-    async: '#34d399',
-    failure: '#f87171',
-    replay: '#fbbf24',
-  };
-  return colors[kind] ?? '#94a3b8';
+  return FLOW_PHASE_EDGE[kind] ?? '#94a3b8';
 }
 
 export function TransactionFlowCanvas() {
+  const wrapRef = useRef(null);
+  const rfRef = useRef(null);
+
   const activeEdgeIds = useTransactionSimulatorStore((s) => s.activeEdgeIds);
   const nodeStatuses = useTransactionSimulatorStore((s) => s.nodeStatuses);
   const branch = useTransactionSimulatorStore((s) => s.branch);
@@ -63,7 +60,19 @@ export function TransactionFlowCanvas() {
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   useEffect(() => {
-    setRfNodes(nodes);
+    setRfNodes((prev) =>
+      nodes.map((n) => {
+        const existing = prev.find((p) => p.id === n.id);
+        if (!existing) return n;
+        if (n.type === 'group') return { ...existing, ...n };
+        return {
+          ...existing,
+          ...n,
+          data: { ...n.data },
+          position: existing.position,
+        };
+      })
+    );
   }, [nodes, setRfNodes]);
 
   const edges = useMemo(() => {
@@ -96,20 +105,95 @@ export function TransactionFlowCanvas() {
 
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);
   useEffect(() => {
-    setRfEdges(edges);
+    setRfEdges((prev) =>
+      edges.map((e) => {
+        const existing = prev.find((p) => p.id === e.id);
+        if (!existing) return e;
+        return {
+          ...existing,
+          ...e,
+          style: e.style,
+          animated: e.animated,
+          markerEnd: e.markerEnd,
+          className: e.className,
+        };
+      })
+    );
   }, [edges, setRfEdges]);
 
-  const onInit = useCallback((instance) => {
-    instance.fitView({ padding: 0.15, maxZoom: 1.1 });
-  }, []);
+  /**
+   * padding multiplies node bounds (see getViewportForBounds): 0 = use full pane width/height for zoom.
+   * Higher maxZoom avoids capping scale when the graph is short/wide vs the viewport.
+   */
+  const fitOpts = useMemo(
+    () => ({
+      padding: 0,
+      minZoom: 0.15,
+      maxZoom: 2.5,
+    }),
+    []
+  );
+
+  /** Maximize graph in the flow pane (centered; uniform scale). Letterboxing only if graph vs pane aspect differs. */
+  const fitViewFillPane = useCallback(
+    (instance) => {
+      instance.fitView(fitOpts);
+    },
+    [fitOpts]
+  );
+
+  const onInit = useCallback(
+    (instance) => {
+      rfRef.current = instance;
+      fitViewFillPane(instance);
+    },
+    [fitViewFillPane]
+  );
+
+  /**
+   * Refit only on real window resize — not on internal layout churn from buttons/store updates.
+   * (visualViewport resize can fire on focus/zoom and re-run fitView unnecessarily.)
+   */
+  useEffect(() => {
+    let debounceTimer;
+    let lastW = window.innerWidth;
+    let lastH = window.innerHeight;
+    const scheduleFit = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (Math.abs(w - lastW) < 2 && Math.abs(h - lastH) < 2) return;
+      lastW = w;
+      lastH = h;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const inst = rfRef.current;
+        if (inst) fitViewFillPane(inst);
+      }, 200);
+    };
+
+    window.addEventListener('resize', scheduleFit);
+
+    return () => {
+      clearTimeout(debounceTimer);
+      window.removeEventListener('resize', scheduleFit);
+    };
+  }, [fitViewFillPane]);
 
   return (
-    <div className="txn-flow-wrap">
-      <div className="txn-phase-tags" aria-hidden>
-        <span style={{ top: 18 }}>Local Transaction Boundary</span>
-        <span style={{ top: 158 }}>Event Dispatch</span>
-        <span style={{ top: 288 }}>Async Processing</span>
-        <span style={{ top: 418 }}>Failure Handling & Recovery</span>
+    <div className="txn-flow-wrap" ref={wrapRef}>
+      <div className="txn-phase-tags" lang="en" aria-hidden>
+        <div className="txn-phase-tags__box txn-phase-tags__box--1">
+          <span className="txn-phase-tags__label txn-phase-tags__label--1">Local Transaction Boundary</span>
+        </div>
+        <div className="txn-phase-tags__box txn-phase-tags__box--2">
+          <span className="txn-phase-tags__label txn-phase-tags__label--2">Event Dispatch</span>
+        </div>
+        <div className="txn-phase-tags__box txn-phase-tags__box--3">
+          <span className="txn-phase-tags__label txn-phase-tags__label--3">Async Processing</span>
+        </div>
+        <div className="txn-phase-tags__box txn-phase-tags__box--4">
+          <span className="txn-phase-tags__label txn-phase-tags__label--4">Failure Handling & Recovery</span>
+        </div>
       </div>
       <ReactFlow
         nodes={rfNodes}
@@ -126,8 +210,8 @@ export function TransactionFlowCanvas() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling
-        minZoom={0.4}
-        maxZoom={1.4}
+        minZoom={0.15}
+        maxZoom={2.5}
         onInit={onInit}
         proOptions={{ hideAttribution: true }}
       >

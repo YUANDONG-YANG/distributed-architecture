@@ -1,5 +1,5 @@
 /** Top-level navigation: matches placeholder page components and product narrative. */
-export const TAB_ORDER = ['transaction', 'observability', 'traffic'];
+export const TAB_ORDER = ['transaction', 'observability', 'traffic', 'rationale'];
 
 export const TAB_META = {
   transaction: {
@@ -22,5 +22,12 @@ export const TAB_META = {
     pageTitle: 'Traffic Governance & System Protection',
     pageSubtitle:
       'Ingress control, validation, elastic absorption, and downstream isolation.',
+  },
+  rationale: {
+    id: 'rationale',
+    shortLabel: 'Design Rationale',
+    pageTitle: 'Why These Three Simulators',
+    pageSubtitle:
+      'Integration engineering: transactions, observability, survivability, and resilience.',
   },
 };

@@ -15,7 +15,7 @@ export function TransactionControls() {
   const retryTitle =
     'Standalone demo: pauses the main chain, seeds Retry if needed, plays retry → consume → fail → DLQ. Click anytime.';
   const replayDlqTitle =
-    'After Manual Ops highlight: DLQ → MQ → Consumer → downstream process log (re-consume only). Standalone; click anytime.';
+    'Starts at DLQ: DLQ → MQ → Consumer → downstream process log (re-consume only). Standalone; click anytime.';
   const replayGuardTitle =
     'Manual Ops → Process Log (Manual) → full happy path from Guard. Standalone; click anytime.';
 

@@ -2,6 +2,16 @@ import { create } from 'zustand';
 import { NODE_IDS as N } from '../data/transactionFlowData.js';
 import { HAPPY_PATH, edgeIdBetween, getPhaseForNode } from '../engine/transactionEngine.js';
 
+/** Module-scoped: advancer loop must survive React StrictMode / tab layout remounts. */
+let happyPathTimer = null;
+
+function clearHappyPathTimer() {
+  if (happyPathTimer != null) {
+    clearTimeout(happyPathTimer);
+    happyPathTimer = null;
+  }
+}
+
 const initialNodeStatuses = () => {
   const o = {};
   Object.values(N).forEach((id) => {
@@ -39,16 +49,53 @@ const defaultState = () => ({
   manualReplayRoute: null,
 });
 
-export const useTransactionSimulatorStore = create((set, get) => ({
+export const useTransactionSimulatorStore = create((set, get) => {
+  const scheduleHappyPathContinue = () => {
+    clearHappyPathTimer();
+    happyPathTimer = setTimeout(() => {
+      happyPathTimer = null;
+      const before = get();
+      if (
+        !before.isRunning ||
+        before.isPaused ||
+        before.transactionStatus !== 'running' ||
+        before.branch !== 'happy'
+      ) {
+        return;
+      }
+      get().advanceStep();
+      const after = get();
+      if (
+        !after.isRunning ||
+        after.isPaused ||
+        after.transactionStatus !== 'running' ||
+        after.branch !== 'happy'
+      ) {
+        return;
+      }
+      scheduleHappyPathContinue();
+    }, 700);
+  };
+
+  return {
   ...defaultState(),
 
-  reset: () => set({ ...defaultState(), nodeStatuses: initialNodeStatuses() }),
+  reset: () => {
+    clearHappyPathTimer();
+    set({ ...defaultState(), nodeStatuses: initialNodeStatuses() });
+  },
 
-  pause: () => set({ isPaused: true, transactionStatus: 'paused' }),
+  pause: () => {
+    clearHappyPathTimer();
+    set({ isPaused: true, transactionStatus: 'paused' });
+  },
 
   resume: () => {
     const s = get();
-    if (s.transactionStatus === 'paused') set({ isPaused: false, transactionStatus: 'running' });
+    if (s.transactionStatus === 'paused') {
+      set({ isPaused: false, transactionStatus: 'running' });
+      scheduleHappyPathContinue();
+    }
   },
 
   injectConsumerFailure: () => {
@@ -59,6 +106,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
   },
 
   _failConsumerFromActive: () => {
+    clearHappyPathTimer();
     const edge = edgeIdBetween(N.consumer, N.retry);
     set((state) => ({
       branch: 'retry',
@@ -125,6 +173,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
   },
 
   startTransaction: () => {
+    clearHappyPathTimer();
     set({
       ...defaultState(),
       nodeStatuses: initialNodeStatuses(),
@@ -136,6 +185,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
       logsTimeline: [{ t: Date.now(), label: 'Transaction started' }],
     });
     get().advanceStep();
+    scheduleHappyPathContinue();
   },
 
   advanceStep: () => {
@@ -204,6 +254,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
 
   /** Standalone: pauses the main chain, seeds Retry if needed, plays retry→consume→fail→DLQ. */
   triggerRetry: () => {
+    clearHappyPathTimer();
     const epoch = get()._bumpEpoch();
     set({ isRunning: false, isPaused: true });
 
@@ -269,44 +320,41 @@ export const useTransactionSimulatorStore = create((set, get) => ({
   },
 
   /**
-   * Standalone manual replay after highlighting Manual Ops.
-   * @param {'dlq' | 'guard'} route — `dlq`: DLQ → MQ → Consumer → downstream log; `guard`: full chain from Guard.
+   * Standalone manual replay.
+   * @param {'dlq' | 'guard'} route — `dlq`: highlight DLQ first, then DLQ → MQ → Consumer → downstream log; `guard`: Manual Ops → process log → full chain from Guard.
    */
   replayFromManualOps: (route = 'guard') => {
+    clearHappyPathTimer();
     const mode = route === 'dlq' ? 'dlq' : 'guard';
     const epoch = get()._bumpEpoch();
-    set((s) => ({
-      branch: 'manual_replay',
-      manualRecoveryStarted: true,
-      replayTriggered: true,
-      manualReplayRoute: null,
-      transactionStatus: 'replaying',
-      isRunning: false,
-      isPaused: true,
-      activeNodeId: N.manualOps,
-      currentPhase: getPhaseForNode(N.manualOps),
-      activeEdgeIds: [],
-      nodeStatuses: {
-        ...s.nodeStatuses,
-        [N.manualOps]: 'running',
-      },
-      logsTimeline: [
-        ...s.logsTimeline,
-        { t: Date.now(), label: `Manual ops replay → ${mode === 'dlq' ? 'DLQ retry' : 'from Guard'}` },
-      ],
-    }));
 
-    const upstreamThroughMq = () => {
+    const baseReplayUpstreamNs = () => {
       const ns = initialNodeStatuses();
       for (const id of HAPPY_PATH) {
         if (id === N.consumer) break;
         ns[id] = 'success';
       }
-      ns[N.dlq] = 'success';
       return ns;
     };
 
     if (mode === 'guard') {
+      set((s) => ({
+        branch: 'manual_replay',
+        manualRecoveryStarted: true,
+        replayTriggered: true,
+        manualReplayRoute: null,
+        transactionStatus: 'replaying',
+        isRunning: false,
+        isPaused: true,
+        activeNodeId: N.manualOps,
+        currentPhase: getPhaseForNode(N.manualOps),
+        activeEdgeIds: [],
+        nodeStatuses: {
+          ...s.nodeStatuses,
+          [N.manualOps]: 'running',
+        },
+        logsTimeline: [...s.logsTimeline, { t: Date.now(), label: 'Manual ops replay → from Guard' }],
+      }));
       window.setTimeout(() => {
         if (get().interactionEpoch !== epoch) return;
         set((state) => ({
@@ -338,9 +386,28 @@ export const useTransactionSimulatorStore = create((set, get) => ({
           logsTimeline: [...state.logsTimeline, { t: Date.now(), label: 'Replay from Guard' }],
         }));
         get().advanceStep();
+        scheduleHappyPathContinue();
       }, 1120);
       return;
     }
+
+    set((s) => ({
+      branch: 'manual_replay',
+      manualRecoveryStarted: true,
+      replayTriggered: true,
+      manualReplayRoute: 'dlq',
+      transactionStatus: 'replaying',
+      isRunning: false,
+      isPaused: true,
+      activeNodeId: N.dlq,
+      currentPhase: getPhaseForNode(N.dlq),
+      activeEdgeIds: [],
+      nodeStatuses: {
+        ...baseReplayUpstreamNs(),
+        [N.dlq]: 'running',
+      },
+      logsTimeline: [...s.logsTimeline, { t: Date.now(), label: 'DLQ retry (start at DLQ)' }],
+    }));
 
     window.setTimeout(() => {
       if (get().interactionEpoch !== epoch) return;
@@ -355,7 +422,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
         currentPhase: getPhaseForNode(N.mq),
         activeEdgeIds: [edgeIdBetween(N.dlq, N.mq)].filter(Boolean),
         currentIndex: HAPPY_PATH.indexOf(N.mq),
-        nodeStatuses: { ...upstreamThroughMq(), [N.mq]: 'running' },
+        nodeStatuses: { ...baseReplayUpstreamNs(), [N.dlq]: 'success', [N.mq]: 'running' },
         logsTimeline: [...state.logsTimeline, { t: Date.now(), label: 'DLQ → MQ (re-queue)' }],
       }));
 
@@ -405,6 +472,7 @@ export const useTransactionSimulatorStore = create((set, get) => ({
           logsTimeline: [...state.logsTimeline, { t: Date.now(), label: 'DLQ retry path completed' }],
         }));
       }, 1560);
-    }, 700);
+    }, 560);
   },
-}));
+  };
+});
