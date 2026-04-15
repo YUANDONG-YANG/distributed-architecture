@@ -11,218 +11,254 @@ export function RationalePage() {
       </header>
 
       <div className="rationale-page__body">
-        <p className="rationale-page__lede">
-          This page explains why the three interactive architecture simulators exist:{' '}
-          <strong>distributed transaction control</strong>,{' '}
-          <strong>production observability and a closed troubleshooting loop</strong>, and{' '}
-          <strong>traffic governance and system protection (survivability / resilience)</strong>. They
-          are not three isolated diagrams—they abstract three classes of problems integration
-          engineers face repeatedly, expressed at the architecture level.
-        </p>
+        <div className="rationale-page__lede-wrap">
+          <p className="rationale-page__lede">
+            The three tabs (<strong>transaction control</strong>, <strong>observability</strong>,{' '}
+            <strong>traffic protection</strong>) each stress-tests one slice of integration work:{' '}
+            <strong>correct execution</strong>, <strong>finding what broke</strong>, and{' '}
+            <strong>staying up when load spikes</strong>. They do not cover everything. You still need a
+            clear line on <strong>who may call what</strong> (identity and policy),{' '}
+            <strong>how APIs and events change without breaking consumers</strong>,{' '}
+            <strong>what latency or error rate you actually promise</strong>, and{' '}
+            <strong>how that ties to money or risk</strong>. The sections below spell that out. Security is
+            called out separately: it is not the same problem as rate limits or log volume.
+          </p>
+        </div>
 
-        <section className="rationale-section">
-          <h2 className="rationale-section__title">1. What integration engineers actually do</h2>
+        <div className="rationale-page__pillar-stack" aria-label="Four additional topics">
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-security">
+          <p className="rationale-section__eyebrow">Security</p>
+          <h2 className="rationale-section__title">Security &amp; trust boundary</h2>
           <p>
-            Integration engineers connect reliable data and process flows across{' '}
-            <strong>heterogeneous systems, asynchronous boundaries, third parties, and legacy APIs</strong>
-            . Typical situations include:
+            Throttling and bulkheads handle <strong>how much</strong> hits the system. They do not replace
+            answers to <strong>who</strong> is calling, <strong>whether the credential is still valid</strong>, or{' '}
+            <strong>what a partner is allowed to do</strong>. Put identity and policy on the same footing as
+            throughput: otherwise you can “protect” a path that is still wide open to the wrong caller.
           </p>
-          <ul className="rationale-list">
-            <li>Coordinating order, payment, inventory, and fulfillment across many services;</li>
-            <li>Message delivery, retries, idempotency, and reconciliation;</li>
-            <li>Unstable or rate-limited vendor APIs;</li>
-            <li>
-              Incidents where you must locate which hop failed and which business line is affected—
-              within minutes.
-            </li>
-          </ul>
-          <p>
-            This work shares three traits: <strong>many boundaries, many failure modes, and failures
-            that are visible across teams</strong>. CRUD inside a single service is not enough—you need
-            to understand <strong>how consistency is defined and delivered in a distributed world</strong>
-            , <strong>how failures are made visible and contained</strong>, and{' '}
-            <strong>how load is kept away from core assets</strong>. The three simulators map to these
-            three capabilities.
-          </p>
-        </section>
-
-        <section className="rationale-section">
-          <h2 className="rationale-section__title">2. Page 1: Distributed transaction control</h2>
-          <p className="rationale-section__tagline">Connect, align, and roll forward or back safely</p>
-          <h3 className="rationale-section__h3">Why it matters</h3>
-          <p>
-            In integration scenarios there is <strong>no single database transaction</strong> wrapping
-            the whole chain. One “business success” is usually split into local commit, publish,
-            downstream consumption, and writes in multiple places. Without clear{' '}
-            <strong>
-              local atomic boundaries, outbox, idempotent consumption, process logs, and
-              compensation/replay
-            </strong>
-            , you get:
-          </p>
-          <ul className="rationale-list">
-            <li>Duplicate delivery leading to duplicate charges or shipments;</li>
-            <li>Misaligned upstream/downstream state and reconciliation that never closes;</li>
-            <li>No durable story of how far execution got—replay has nowhere to start.</li>
-          </ul>
-          <p>
-            For integration engineers, this page answers:{' '}
-            <strong>
-              under asynchrony and multiple systems, how to turn one business operation into an
-              auditable, retryable, convergent engineering fact
-            </strong>
-            —not hope that “it should be fine.”
-          </p>
-          <h3 className="rationale-section__h3">Tie-in to integration work</h3>
           <ul className="rationale-list">
             <li>
-              You own <strong>end-to-end consistency across systems</strong>: beyond API contracts you
-              define <strong>failure semantics</strong> and <strong>recovery paths</strong>.
+              <strong>Authentication &amp; authorization</strong> at the edge and between services:
+              human users, service accounts, batch jobs—each with scopes that match the integration.
             </li>
             <li>
-              <strong>Idempotency, process logs, DLQs, and manual intervention</strong> are part of
-              integration design—not only operations.
+              <strong>Token lifecycle</strong>: issuance, rotation, refresh, revocation, and least-privilege
+              scopes tied to integration flows (callbacks, webhooks, partner APIs).
+            </li>
+            <li>
+              <strong>Per-hop trust</strong>: assume the network is not special; attach policy to identity
+              and request context, not just VLAN or IP.
+            </li>
+            <li>
+              <strong>mTLS</strong> (or equivalent) for east–west where it buys you real assurance; wire it
+              to service identity and policy, not a one-off cert install.
+            </li>
+            <li>
+              <strong>Secret rotation</strong>: credentials for vendors, signing keys, connection strings—
+              automated and observable, not quarterly heroics.
+            </li>
+            <li>
+              <strong>Third-party access governance</strong>: scoped credentials, egress controls, allowlists,
+              and audit of what external systems can reach or invoke.
             </li>
           </ul>
         </section>
 
-        <section className="rationale-section">
-          <h2 className="rationale-section__title">3. Page 2: Monitoring and observability</h2>
-          <p className="rationale-section__tagline">See it, correlate it, close the loop</p>
-          <h3 className="rationale-section__h3">Why it matters</h3>
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-contract">
+          <p className="rationale-section__eyebrow">Contracts</p>
+          <h2 className="rationale-section__title">Contract governance</h2>
           <p>
-            Integration paths are long and failure points are scattered. Without a{' '}
-            <strong>metrics–traces–logs</strong> loop, troubleshooting devolves into “every team says
-            they are green.” Integration engineers are often asked to:
+            The demos focus on <strong>behavior when messages fly</strong>. In production, integrations
+            also rot: schemas shift, new consumers appear, old ones lag. If you never pin down compatibility
+            rules, you fix one outage and ship the next breakage with the next deploy.
           </p>
           <ul className="rationale-list">
             <li>
-              Use <strong>requestId / traceId / business keys</strong> to stitch gateway, services,
-              message queues, and third parties into one narrative;
+              <strong>API contracts</strong> written down: what may change without a major version, who owns
+              the doc, how consumers get warned.
             </li>
             <li>
-              Cut through alert noise to tell <strong>dependency flakiness</strong> from{' '}
-              <strong>your own release</strong>;
+              <strong>Schema evolution</strong> for payloads and events: additive changes, safe rollouts,
+              and clear deprecation windows.
             </li>
             <li>
-              After root cause, drive <strong>retries, replay, and compensation</strong> to finish the
-              business story.
-            </li>
-          </ul>
-          <p>
-            The point is not a wall of dashboards—it is a <strong>production-grade incident loop</strong>
-            : from detection to correlation, then linking to <strong>process logs / replay</strong> from
-            Page 1.
-          </p>
-          <h3 className="rationale-section__h3">Tie-in to integration work</h3>
-          <ul className="rationale-list">
-            <li>
-              Third parties and legacy stacks vary in observability—you must design{' '}
-              <strong>correlation keys and fallback correlation</strong>.
+              <strong>Event versioning</strong> and consumer-driven expectations so replay and new consumers
+              do not silently fork reality.
             </li>
             <li>
-              <strong>Integration amplifies incidents</strong>: weak observability turns the
-              integration layer into a black box and blurs ownership.
+              <strong>Consumer compatibility</strong>: who must upgrade, who can lag, and how you test
+              matrix combinations.
+            </li>
+            <li>
+              <strong>Data ownership</strong>: which system is source of truth for which fact; where
+              reconciliation is a product of design, not an accident of history.
             </li>
           </ul>
         </section>
 
-        <section className="rationale-section">
-          <h2 className="rationale-section__title">4. Page 3: Traffic governance and protection</h2>
-          <p className="rationale-section__tagline">
-            Survivability / resilience—absorb load, isolate failures, protect the core
-          </p>
-          <h3 className="rationale-section__h3">Why survivability matters</h3>
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-slo">
+          <p className="rationale-section__eyebrow">SLOs &amp; rehearsal</p>
+          <h2 className="rationale-section__title">SLOs, capacity, and chaos engineering</h2>
           <p>
-            “Survivability” here means the system can still reserve capacity for critical work and
-            degrade predictably under abnormal load or dependency failure—not merely that a process is
-            still running. Integration ingress is often where bursts appear (promotions, batch
-            callbacks, reconciliation jobs, retry storms). Without layered defenses at{' '}
-            <strong>ingress, validation, elasticity, and downstream isolation</strong>,{' '}
-            <strong>databases and core dependencies become the bottleneck first</strong> and can trigger
-            site-wide incidents.
+            Retry policies and circuit breakers show you thought about failure modes. That is different from
+            saying <strong>how good the path must be</strong> (SLIs/SLOs), <strong>how much spare capacity
+            you keep</strong>, and <strong>whether you have ever broken dependencies on purpose</strong> to
+            see what actually happens.
           </p>
-          <h3 className="rationale-section__h3">Tie-in to integration work</h3>
           <ul className="rationale-list">
             <li>
-              <strong>Retries, callbacks, and batch jobs</strong> can create{' '}
-              <strong>retry storms</strong> at the integration tier—they must be designed together with
-              rate limiting, circuit breaking, and fail-fast behavior.
+              <strong>SLIs &amp; SLOs</strong> on the integration paths that matter (latency, success,
+              freshness), with a named owner and a review cadence—not a chart nobody acts on.
             </li>
             <li>
-              <strong>Caches and queues shift pressure but do not replace layered governance</strong>.
-              The third page’s message: <strong>move protection of the DB / core toward the middle tier
-              and edge</strong>—often underestimated in integration architecture.
+              <strong>Error budgets</strong>: when to freeze features, throttle, or invest in
+              remediation—linking reliability to product trade-offs.
+            </li>
+            <li>
+              <strong>Capacity planning &amp; headroom</strong>: peak events, partner bursts, replay
+              storms—validated with load tests, not hope.
+            </li>
+            <li>
+              <strong>Chaos engineering / game days / fault injection</strong>: inject latency, drops, or
+              partial outages in staging (or controlled prod) so you see whether isolation and backoff do
+              what you assumed.
             </li>
           </ul>
         </section>
 
-        <section className="rationale-section">
-          <h2 className="rationale-section__title">
-            5. Together: a minimal complete narrative for integration engineers
-          </h2>
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-business">
+          <p className="rationale-section__eyebrow">Impact</p>
+          <h2 className="rationale-section__title">Business-domain framing</h2>
+          <p>
+            Idempotency and tracing are easier to fund when you name the downside:{' '}
+            <strong>double charges</strong>, <strong>long finance close</strong>, or{' '}
+            <strong>checkout down during a promo</strong>. Same mechanisms; clearer priority when you tie them
+            to dollars or SLAs partners see.
+          </p>
+          <ul className="rationale-list">
+            <li>
+              <strong>Prevent duplicate charges / duplicate side effects</strong>—the monetary and
+              reputational face of idempotency and exactly-once <em>effects</em>.
+            </li>
+            <li>
+              <strong>Shorten reconciliation cycles</strong>—clear ownership of state, auditable process
+              logs, and observable handoffs between finance and operations.
+            </li>
+            <li>
+              <strong>Lower MTTR</strong> on integration incidents via correlation (requestId / business
+              keys) and playbooks tied to replay and compensation.
+            </li>
+            <li>
+              <strong>Limit blast radius</strong>—rate limits, bulkheads, and degradation paths that protect
+              core catalog, payment, or fulfillment.
+            </li>
+            <li>
+              <strong>Protect revenue paths</strong>—promotions, checkout, and partner SLAs treated as
+              first-class SLOs, not afterthoughts behind internal metrics.
+            </li>
+          </ul>
+        </section>
+        </div>
+
+        <section className="rationale-section rationale-section--surface">
+          <h2 className="rationale-section__title">How this maps to the simulators</h2>
+          <p>
+            The three tabs are where you click through behavior. The four topics above are what you bring
+            when the discussion moves to <strong>trust boundaries</strong>, <strong>long-term API
+            change</strong>, <strong>committed reliability</strong>, or <strong>why the work matters to the
+            business</strong>.
+          </p>
           <div className="rationale-table-wrap">
             <table className="rationale-table">
               <thead>
                 <tr>
-                  <th scope="col">Dimension</th>
-                  <th scope="col">Question it answers</th>
+                  <th scope="col">Topic</th>
+                  <th scope="col">Beside the three demos</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Transaction control</td>
+                  <td>Transaction simulator</td>
                   <td>
-                    How data and state <strong>advance and converge correctly across systems</strong>
+                    Idempotency, process logs, replay, and compensation so cross-service work stays
+                    consistent and fixable after partial failure.
                   </td>
                 </tr>
                 <tr>
                   <td>Observability</td>
                   <td>
-                    After an issue, <strong>how to localize and prove cause quickly</strong>
+                    Tie metrics, traces, and logs to business keys; follow a request when ownership splits or
+                    a vendor black-boxes part of the path.
                   </td>
                 </tr>
                 <tr>
-                  <td>Survivability</td>
+                  <td>Traffic protection</td>
                   <td>
-                    Under stress and failure, <strong>how to protect the core and bound blast radius</strong>
+                    Shed or shape load before it reaches databases and core services; isolate failures so
+                    retries do not amplify into outages.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Security &amp; trust</strong>
+                  </td>
+                  <td>
+                    Who may call what, with which credential, how keys rotate, and how third-party access
+                    is scoped and audited.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Contract governance</td>
+                  <td>
+                    Schema and event rules, deprecation windows, and which team owns which fact so drift is
+                    visible early.
+                  </td>
+                </tr>
+                <tr>
+                  <td>SLO / capacity / chaos</td>
+                  <td>
+                    Numbers you stand behind, headroom for peaks, and exercises that break dependencies on
+                    purpose.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Business framing</td>
+                  <td>
+                    Duplicate charges, reconciliation time, incident duration, and how far a partner outage
+                    can spread.
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p>
-            The three threads depend on each other:{' '}
-            <strong>
-              without observability, transactions and replay are hard to validate; without transaction
-              semantics, monitoring stays superficial; without traffic and resilience governance, one
-              bad dependency can take down the whole integration path
-            </strong>
-            . Owning all three lets you operate at the level of <strong>system design</strong>—not only
-            “wiring an API.”
-          </p>
         </section>
 
-        <section className="rationale-section rationale-section--last">
-          <h2 className="rationale-section__title">6. Summary</h2>
+        <section className="rationale-section rationale-section--surface rationale-section--last">
+          <h2 className="rationale-section__title">Summary</h2>
           <ul className="rationale-list">
             <li>
-              <strong>Page 1</strong> makes <strong>correctness and recoverability</strong> of
-              distributed integration explicit.
+              The three tabs cover execution, troubleshooting, and load—<strong>the usual integration
+              triad</strong>.
             </li>
             <li>
-              <strong>Page 2</strong> makes <strong>diagnosability and closed-loop handling</strong> of
-              cross-system incidents explicit.
+              <strong>Security</strong> is its own topic: identity, policy, secrets—not a footnote under
+              traffic or logging.
             </li>
             <li>
-              <strong>Page 3</strong> shows how <strong>load and dependency risk</strong> from
-              integration is <strong>absorbed in layers while the core stays protected</strong>.
+              <strong>Contracts</strong> decide whether you can change systems for years without surprise
+              breaks.
+            </li>
+            <li>
+              <strong>SLOs, capacity, chaos</strong> turn “we handle failure” into numbers and drills you
+              can defend.
+            </li>
+            <li>
+              <strong>Business framing</strong> states the cost of getting it wrong in terms finance and
+              partners already use.
             </li>
           </ul>
           <p className="rationale-page__closing">
-            Together they form a demonstrable, explainable backbone for{' '}
-            <strong>integration and distributed architecture</strong>—useful in design reviews,
-            interviews, and team alignment on what “reliable integration” actually means.
+            Use the demos for hands-on behavior; use these four when the question is trust, change over
+            time, measurable reliability, or impact outside engineering.
           </p>
         </section>
       </div>

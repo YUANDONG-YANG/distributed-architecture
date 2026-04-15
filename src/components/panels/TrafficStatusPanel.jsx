@@ -1,4 +1,5 @@
 import { useTrafficStore } from '../../store/trafficStore.js';
+import { TRAFFIC } from '../../data/trafficConfig.js';
 
 function Row({ label, value }) {
   return (
@@ -18,6 +19,7 @@ export function TrafficStatusPanel() {
   const incoming = useTrafficStore((s) => s.totalRequests);
   const flowRemainder = useTrafficStore((s) => s.flowRemainder);
   const fallbackTriggered = useTrafficStore((s) => s.fallbackTriggered);
+  const breakerState = useTrafficStore((s) => s.breakerState);
 
   return (
     <section className="panel panel--tight" aria-label="Traffic simulation status">
@@ -25,8 +27,20 @@ export function TrafficStatusPanel() {
       <Row label="Status" value={simulationStatus} />
       <Row label="Mode" value={mode} />
       <Row label="Step" value={phaseIndex >= 0 ? String(phaseIndex) : '—'} />
-      <Row label="Highlight layer" value={currentLayer ?? '—'} />
-      <Row label="Incoming" value={incoming || '—'} />
+      <Row
+        label="Highlight layer"
+        value={
+          currentLayer === 'breaker'
+            ? 'service (isolation)'
+            : currentLayer === 'filter'
+              ? 'service (filter)'
+              : currentLayer === null
+                ? '—'
+                : String(currentLayer)
+        }
+      />
+      <Row label={`Ingress window (${TRAFFIC.windowSeconds}s)`} value={incoming || '—'} />
+      <Row label="Breaker state" value={breakerState} />
       <Row label="Flow (toward DB)" value={flowRemainder || '—'} />
       <Row label="Fallback" value={fallbackTriggered ? 'triggered' : 'idle'} />
       <Row label="DB final load" value={dbFinalLoad || '—'} />

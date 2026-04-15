@@ -21,13 +21,13 @@ export const TAB_META = {
     shortLabel: 'Traffic Protection',
     pageTitle: 'Traffic Governance & System Protection',
     pageSubtitle:
-      'Ingress control, validation, elastic absorption, and downstream isolation.',
+      'Survivability: reconciled admission, validation, elastic capacity, isolation, and DB outcomes (per evaluation window).',
   },
   rationale: {
     id: 'rationale',
     shortLabel: 'Design Rationale',
-    pageTitle: 'Why These Three Simulators',
+    pageTitle: 'Design Rationale',
     pageSubtitle:
-      'Integration engineering: transactions, observability, survivability, and resilience.',
+      'What the three demos leave implicit: security, contracts, SLOs, and how to talk about impact.',
   },
 };

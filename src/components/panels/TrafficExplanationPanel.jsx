@@ -3,27 +3,19 @@ import { useTrafficStore } from '../../store/trafficStore.js';
 const LAYERS = {
   gateway: {
     name: 'Gateway',
-    purpose: 'Control ingress traffic and authenticate callers.',
-    protects: 'Core tiers from uncontrolled access and burst admission.',
-    failure: 'Unbounded traffic admission and credential abuse.',
-  },
-  filter: {
-    name: 'Business Filter',
-    purpose: 'Reject invalid or non-actionable work early.',
-    protects: 'CPU, threads, and downstream quotas from wasted effort.',
-    failure: 'Resource exhaustion on poisonous or duplicate requests.',
+    purpose:
+      'Split identity, rate-control, and policy outcomes: auth denial, token-bucket / rate limiting, and policy rejects are different failure families and must not be lumped into one “dropped” bucket.',
+    protects: 'Downstream tiers from anonymous bursts, credential abuse, and quota exhaustion.',
+    failure: 'Ambiguous drops that hide whether you are failing secure or failing fair.',
   },
   service: {
     name: 'Service Layer',
-    purpose: 'Absorb bursts via scaling and buffering.',
-    protects: 'Downstream from synchronized spikes.',
-    failure: 'Thundering herd into databases and shared pools.',
-  },
-  breaker: {
-    name: 'Circuit Breaker',
-    purpose: 'Isolate unstable dependencies quickly.',
-    protects: 'Callers from cascading latency and error propagation.',
-    failure: 'Retry storms and metastable overload.',
+    purpose:
+      'Filter and validate requests inside the tier (invalid work, state, idempotency pre-checks); absorb bursts via elastic scale-out when enabled, otherwise backlog against a fixed floor; apply downstream isolation (circuit breakers, fail-fast, fallback)—all as service-side mechanisms, not separate “layers” above the service.',
+    protects:
+      'CPU, pools, and databases from wasted work, synchronized spikes, and cascading failures.',
+    failure:
+      'Poison traffic amplification, thundering herds, retry storms, and metastable overload reaching the data plane.',
   },
   db: {
     name: 'Database',
@@ -35,7 +27,11 @@ const LAYERS = {
 
 export function TrafficExplanationPanel() {
   const currentLayer = useTrafficStore((s) => s.currentLayer);
-  const key = currentLayer && LAYERS[currentLayer] ? currentLayer : 'gateway';
+  const resolved =
+    currentLayer === 'breaker' || currentLayer === 'filter' || currentLayer === 'service'
+      ? 'service'
+      : currentLayer;
+  const key = resolved && LAYERS[resolved] ? resolved : 'gateway';
   const L = LAYERS[key];
 
   return (
