@@ -19,7 +19,7 @@ export function TransactionSimulatorPage() {
             Local atomicity, event dispatch, idempotent consumption, and recoverable failure handling.
           </p>
         </div>
-        <span className="sim-page__credit">Robin yang</span>
+        <span className="sim-page__credit">Robin Yang</span>
       </header>
 
       <div className="sim-page__body">

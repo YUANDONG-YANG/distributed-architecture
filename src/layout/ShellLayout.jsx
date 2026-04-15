@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TAB_META, TAB_ORDER } from '../data/tabs.js';
 import { useUiStore } from '../store/uiStore.js';
 import { ObservabilityPage } from '../pages/ObservabilityPage.jsx';
+import { EngineeringPracticePage } from '../pages/EngineeringPracticePage.jsx';
 import { RationalePage } from '../pages/RationalePage.jsx';
 import { TrafficProtectionPage } from '../pages/TrafficProtectionPage.jsx';
 import { TransactionSimulatorPage } from '../pages/TransactionSimulatorPage.jsx';
@@ -11,6 +12,7 @@ const PAGE_BY_TAB = {
   observability: ObservabilityPage,
   traffic: TrafficProtectionPage,
   rationale: RationalePage,
+  engineering: EngineeringPracticePage,
 };
 
 export function ShellLayout() {
@@ -24,7 +26,7 @@ export function ShellLayout() {
         <div className="app-title-block">
           <h1 className="app-title">Distributed System Simulator</h1>
           <p className="app-subtitle">Correctness → diagnosability → survivability</p>
-          <p className="app-author">Author: Robin yang</p>
+          <p className="app-author">Author: Robin Yang</p>
         </div>
         <nav className="app-tabs" aria-label="Primary">
           {TAB_ORDER.map((id) => {
@@ -35,6 +37,7 @@ export function ShellLayout() {
                 key={id}
                 type="button"
                 className="app-tab"
+                data-tab={id}
                 data-active={isActive}
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => setActiveTab(id)}

@@ -1,5 +1,11 @@
 /** Top-level navigation: matches placeholder page components and product narrative. */
-export const TAB_ORDER = ['transaction', 'observability', 'traffic', 'rationale'];
+export const TAB_ORDER = [
+  'transaction',
+  'observability',
+  'traffic',
+  'rationale',
+  'engineering',
+];
 
 export const TAB_META = {
   transaction: {
@@ -29,5 +35,12 @@ export const TAB_META = {
     pageTitle: 'Design Rationale',
     pageSubtitle:
       'What the three demos leave implicit: security, contracts, SLOs, and how to talk about impact.',
+  },
+  engineering: {
+    id: 'engineering',
+    shortLabel: 'Engineering Practice',
+    pageTitle: 'Engineering Practice & Implementation',
+    pageSubtitle:
+      'Concrete mechanisms, where load hits the DB, and how you describe real delivery—not a glossary.',
   },
 };

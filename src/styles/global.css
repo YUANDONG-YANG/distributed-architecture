@@ -73,35 +73,195 @@ button {
 
 .app-tabs {
   display: flex;
-  gap: 0.35rem;
-  padding: 0.2rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  padding: 0.35rem 0.4rem;
   border-radius: var(--radius-md);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
+  background: rgba(2, 6, 23, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .app-tab {
   position: relative;
-  padding: 0.45rem 0.9rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-secondary);
+  padding: 0.48rem 0.95rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    filter 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tab {
+    transition: none;
+  }
 }
 
 .app-tab:hover {
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+  filter: brightness(1.06);
 }
 
-.app-tab[data-active='true'] {
-  color: var(--color-text-primary);
-  background: rgba(56, 189, 248, 0.12);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
+.app-tab:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+/* 1 — Transaction: teal / emerald */
+.app-tab[data-tab='transaction'] {
+  color: rgba(240, 253, 250, 0.92);
+  background: linear-gradient(145deg, rgba(45, 212, 191, 0.22) 0%, rgba(13, 148, 136, 0.14) 55%, rgba(15, 118, 110, 0.1) 100%);
+  border-color: rgba(45, 212, 191, 0.28);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.app-tab[data-tab='transaction']:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(13, 148, 136, 0.22);
+}
+
+.app-tab[data-tab='transaction'][data-active='true'] {
+  color: #ecfdf5;
+  font-weight: 600;
+  background: linear-gradient(145deg, rgba(52, 211, 153, 0.55) 0%, rgba(16, 185, 129, 0.42) 45%, rgba(5, 150, 105, 0.38) 100%);
+  border-color: rgba(110, 231, 183, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(16, 185, 129, 0.35),
+    0 8px 24px rgba(16, 185, 129, 0.28);
+}
+
+/* 2 — Observability: sky / cyan */
+.app-tab[data-tab='observability'] {
+  color: rgba(240, 249, 255, 0.94);
+  background: linear-gradient(145deg, rgba(56, 189, 248, 0.24) 0%, rgba(14, 165, 233, 0.14) 55%, rgba(3, 105, 161, 0.1) 100%);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.app-tab[data-tab='observability']:hover {
+  border-color: rgba(125, 211, 252, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(14, 165, 233, 0.22);
+}
+
+.app-tab[data-tab='observability'][data-active='true'] {
+  color: #f0f9ff;
+  font-weight: 600;
+  background: linear-gradient(145deg, rgba(56, 189, 248, 0.52) 0%, rgba(14, 165, 233, 0.4) 45%, rgba(2, 132, 199, 0.38) 100%);
+  border-color: rgba(125, 211, 252, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 0 0 1px rgba(56, 189, 248, 0.35),
+    0 8px 24px rgba(56, 189, 248, 0.3);
+}
+
+/* 3 — Traffic: amber */
+.app-tab[data-tab='traffic'] {
+  color: rgba(255, 251, 235, 0.94);
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.26) 0%, rgba(245, 158, 11, 0.16) 55%, rgba(217, 119, 6, 0.12) 100%);
+  border-color: rgba(251, 191, 36, 0.32);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.app-tab[data-tab='traffic']:hover {
+  border-color: rgba(253, 224, 71, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(245, 158, 11, 0.24);
+}
+
+.app-tab[data-tab='traffic'][data-active='true'] {
+  color: #fffbeb;
+  font-weight: 600;
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.52) 0%, rgba(245, 158, 11, 0.42) 45%, rgba(217, 119, 6, 0.36) 100%);
+  border-color: rgba(253, 224, 71, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(245, 158, 11, 0.38),
+    0 8px 24px rgba(245, 158, 11, 0.28);
+}
+
+/* 4 — Design rationale: violet */
+.app-tab[data-tab='rationale'] {
+  color: rgba(245, 243, 255, 0.94);
+  background: linear-gradient(145deg, rgba(167, 139, 250, 0.24) 0%, rgba(139, 92, 246, 0.14) 55%, rgba(109, 40, 217, 0.1) 100%);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.app-tab[data-tab='rationale']:hover {
+  border-color: rgba(196, 181, 253, 0.52);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(139, 92, 246, 0.22);
+}
+
+.app-tab[data-tab='rationale'][data-active='true'] {
+  color: #f5f3ff;
+  font-weight: 600;
+  background: linear-gradient(145deg, rgba(167, 139, 250, 0.5) 0%, rgba(139, 92, 246, 0.4) 45%, rgba(124, 58, 237, 0.36) 100%);
+  border-color: rgba(196, 181, 253, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(167, 139, 250, 0.38),
+    0 8px 24px rgba(139, 92, 246, 0.28);
+}
+
+/* 5 — Engineering practice: rose / fuchsia */
+.app-tab[data-tab='engineering'] {
+  color: rgba(255, 241, 246, 0.94);
+  background: linear-gradient(145deg, rgba(244, 114, 182, 0.24) 0%, rgba(236, 72, 153, 0.14) 55%, rgba(190, 24, 93, 0.1) 100%);
+  border-color: rgba(244, 114, 182, 0.32);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.app-tab[data-tab='engineering']:hover {
+  border-color: rgba(251, 207, 232, 0.52);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(236, 72, 153, 0.24);
+}
+
+.app-tab[data-tab='engineering'][data-active='true'] {
+  color: #fff1f2;
+  font-weight: 600;
+  background: linear-gradient(145deg, rgba(244, 114, 182, 0.5) 0%, rgba(236, 72, 153, 0.4) 45%, rgba(219, 39, 119, 0.36) 100%);
+  border-color: rgba(251, 207, 232, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(244, 114, 182, 0.38),
+    0 8px 24px rgba(236, 72, 153, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-tab:hover,
+  .app-tab:active {
+    transform: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .app-tabs {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .app-body {
@@ -2392,6 +2552,28 @@ button {
 .rationale-section--pillar-business {
   border-left-color: rgba(52, 211, 153, 0.75);
 }
+
+/* Engineering Practice page (Page 5): fifth pillar accent */
+.rationale-section--pillar-implementation {
+  border-left-color: rgba(251, 191, 36, 0.8);
+}
+
+.engineering-practice-page .engineering-landing {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.95rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  background: rgba(15, 23, 42, 0.65);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.engineering-practice-page .engineering-landing strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
 
 .rationale-section__title {
   margin: 0 0 0.65rem;
