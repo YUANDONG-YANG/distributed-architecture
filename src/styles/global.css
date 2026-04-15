@@ -2482,6 +2482,19 @@ button {
   font-weight: 600;
 }
 
+/* Engineering Practice: page intro lede uses same card + left accent as `.rationale-section--pillar-business` */
+.engineering-practice-page .rationale-page__lede-wrap {
+  padding: 1.15rem 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-left-width: 4px;
+  border-left-color: rgba(52, 211, 153, 0.75);
+  background: rgba(2, 6, 23, 0.48);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
 .rationale-page__pillar-stack {
   display: flex;
   flex-direction: column;
@@ -2553,13 +2566,24 @@ button {
   border-left-color: rgba(52, 211, 153, 0.75);
 }
 
-/* Engineering Practice page (Page 5): fifth pillar accent */
-.rationale-section--pillar-implementation {
-  border-left-color: rgba(251, 191, 36, 0.8);
+/* Engineering Practice (Page 5): “When the budget bites” — warm metric / budget */
+.rationale-section--pillar-capacity {
+  border-left-color: rgba(245, 158, 11, 0.88);
+}
+
+/* II · Concurrency & performance — load / throughput */
+.rationale-section--pillar-performance {
+  border-left-color: rgba(52, 211, 153, 0.85);
+}
+
+/* III · Ownership — alignment / voice */
+.rationale-section--pillar-ownership {
+  border-left-color: rgba(167, 139, 250, 0.88);
 }
 
 .engineering-practice-page .engineering-landing {
   margin: 0.75rem 0 0;
+  max-width: none;
   padding: 0.75rem 0.95rem 0.8rem;
   border-radius: var(--radius-md);
   border: 1px solid rgba(56, 189, 248, 0.18);
@@ -2567,6 +2591,47 @@ button {
   font-size: 0.88rem;
   line-height: 1.65;
   color: var(--color-text-secondary);
+}
+
+/*
+ * Design Rationale + Engineering Practice: use full column width for copy (no 72ch measure),
+ * so lines extend to the card edge—fewer wraps and less vertical scrolling.
+ */
+.rationale-page .rationale-page__subtitle,
+.rationale-page .rationale-page__lede,
+.rationale-page .rationale-section p,
+.rationale-page .rationale-section--pillar .rationale-list,
+.rationale-page .rationale-section--surface .rationale-list,
+.rationale-page .rationale-page__closing {
+  max-width: none;
+}
+
+/*
+ * Design Rationale (page 4 only): intro + “surface” sections use the same card chrome as pillars
+ * (4px left accent, --radius-md, shared background + shadow) so every unit reads as one family.
+ */
+.rationale-page:not(.engineering-practice-page) .rationale-page__lede-wrap {
+  padding: 1.15rem 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-left-width: 4px;
+  border-left-color: rgba(56, 189, 248, 0.78);
+  background: rgba(2, 6, 23, 0.48);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.rationale-page:not(.engineering-practice-page) .rationale-section--surface {
+  padding: 1.15rem 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-left-width: 4px;
+  border-left-color: rgba(52, 211, 153, 0.75);
+  background: rgba(2, 6, 23, 0.48);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .engineering-practice-page .engineering-landing strong {
@@ -2728,13 +2793,209 @@ button {
   max-width: var(--rationale-measure);
 }
 
+/* Closing note: distinct accent from II/III/SLO blocks above */
+.engineering-practice-page .engineering-afterword {
+  --afterword-shimmer-s: 8s;
+  margin-top: 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1.15rem 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-left-width: 4px;
+  border-left-color: rgba(14, 165, 233, 0.9);
+  background: rgba(2, 6, 23, 0.48);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.engineering-practice-page .engineering-afterword__lede-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.engineering-practice-page .engineering-afterword__lede {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: none;
+  font-size: 0.88rem;
+  line-height: 1.72;
+  letter-spacing: 0.01em;
+}
+
+/** Left→right color sweep on closing paragraph (no text scrolling). Duration: `--afterword-shimmer-s` on aside. */
+.engineering-practice-page .engineering-afterword__lede-shimmer {
+  display: inline;
+  color: var(--color-text-secondary);
+  background-image: linear-gradient(
+    95deg,
+    #94a3b8 0%,
+    #94a3b8 18%,
+    #e2e8f0 34%,
+    #7dd3fc 46%,
+    #e0f2fe 52%,
+    #38bdf8 58%,
+    #cbd5e1 72%,
+    #94a3b8 88%,
+    #94a3b8 100%
+  );
+  background-size: 280% 100%;
+  background-position: 0% 50%;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .engineering-practice-page .engineering-afterword__lede-shimmer {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation:
+      engineering-afterword-shimmer-sweep var(--afterword-shimmer-s, 8s) linear infinite,
+      engineering-afterword-shimmer-glow calc(var(--afterword-shimmer-s, 8s) * 0.875) ease-in-out infinite;
+  }
+}
+
+@keyframes engineering-afterword-shimmer-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes engineering-afterword-shimmer-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 1px rgba(56, 189, 248, 0.15));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 8px rgba(125, 211, 252, 0.4)) drop-shadow(0 0 18px rgba(56, 189, 248, 0.12));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engineering-practice-page .engineering-afterword__lede-shimmer {
+    animation: none !important;
+    color: var(--color-text-secondary) !important;
+    background-image: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    filter: none !important;
+  }
+}
+
+.engineering-practice-page .engineering-afterword__ripple {
+  position: absolute;
+  z-index: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  margin-top: -10px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(125, 211, 252, 0.42) 0%,
+    rgba(56, 189, 248, 0.18) 38%,
+    transparent 68%
+  );
+  box-shadow:
+    0 0 0 1px rgba(125, 211, 252, 0.25),
+    0 0 24px rgba(56, 189, 248, 0.2);
+  animation: engineering-afterword-ripple 0.7s ease-out forwards;
+}
+
+@keyframes engineering-afterword-ripple {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(22);
+    opacity: 0;
+  }
+}
+
+.engineering-practice-page .engineering-afterword__contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  width: 100%;
+  margin-top: 0.95rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.engineering-practice-page .engineering-afterword__hint {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.engineering-practice-page .engineering-afterword__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.engineering-practice-page .engineering-afterword__link:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  background: rgba(56, 189, 248, 0.16);
+  color: #e0f2fe;
+}
+
+@media (max-width: 520px) {
+  .engineering-practice-page .engineering-afterword__contact {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+
 @media (max-width: 560px) {
   .rationale-page__lede-wrap {
     padding: 0.95rem 1rem;
   }
 
+  .rationale-page:not(.engineering-practice-page) .rationale-page__lede-wrap {
+    padding: 1rem 1rem 1.1rem;
+  }
+
+  .engineering-practice-page .rationale-page__lede-wrap {
+    padding: 1rem 1rem 1.1rem;
+  }
+
   .rationale-section--pillar,
   .rationale-section--surface {
+    padding: 1rem 1rem 1.1rem;
+  }
+
+  .engineering-practice-page .engineering-afterword {
     padding: 1rem 1rem 1.1rem;
   }
 

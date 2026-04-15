@@ -1,55 +1,77 @@
 # Distributed System Simulator
 
-A **distributed systems simulator** frontend for architecture walkthroughs and teaching. It uses interactive UIs to explain transaction control, observability loops, traffic governance, design rationale, and engineering practice (aligned with the narrative Markdown under `content/`).
+Interactive web application for demonstrating distributed-systems concepts—transaction boundaries, observability, traffic governance, and design tradeoffs—through simulations and narrative copy. This repository contains the **frontend only** (no backend API).
 
-## Features
+## What it does
 
-| Area                    | Description                                                                                                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Transaction Control** | Simulates a distributed transaction control chain: local atomicity, outbox, async consumption, retry / DLQ / manual handling, with React Flow swimlanes and state progression. |
-| **Observability Loop**  | Narrative page for observability and troubleshooting: metrics, tracing, log correlation, and business-level recovery patterns.                                                 |
-| **Traffic Protection**  | Traffic governance and system protection: ingress → gateway → service tier → isolation / breaker → DB, with layered metrics and simulation outcomes.                           |
-| **Design Rationale**    | Extended lenses: security, contracts, SLOs, and how to discuss impact.                                                                                                         |
-| **Engineering Practice** | Complements the demos with implementation-level detail: concrete mechanisms (state machine, CAS, outbox, idempotency, retry/DLQ), load/DB and concurrency angles, and a first-person view of integration work. See `content/page/page5.md`. |
+The app is organized as a **single-page application** with a tabbed shell. Each tab targets a different theme:
 
-**Stack:** React 18, Vite 5, React Flow, Zustand, Framer Motion.
+| Tab | Purpose |
+|-----|---------|
+| **Transaction Control** | Interactive flow (React Flow) simulating a transaction pipeline: local consistency, outbox, async paths, retries, DLQ, and manual replay. |
+| **Observability Loop** | Read-only narrative on metrics, tracing, logs, and recovery-oriented observability. |
+| **Traffic Protection** | Layered traffic simulation (ingress → gateway → service → breaker/DB) with metrics and outcome summaries. |
+| **Design Rationale** | Broader framing: security, contracts, SLOs, and communicating impact. |
+| **My Practice** | Author notes on wiring, load, DB pressure, and ownership (`content/page/page5.md`). |
 
-## Requirements
+Supporting architecture text lives under `content/`; it is reference material and is not required for `npm run build`.
 
-- **Node.js** 18+ (current LTS recommended)
-- **npm** 9+ (or compatible **pnpm** / **yarn**)
+## Tech stack
 
-## Install and run
+- [React 18](https://react.dev/)
+- [Vite 5](https://vitejs.dev/)
+- [React Flow](https://reactflow.dev/) (graph UI)
+- [Zustand](https://github.com/pmndrs/zustand) (state)
+- [Framer Motion](https://www.framer.com/motion/) (animation)
+
+## Prerequisites
+
+- **Node.js** ≥ 18 (LTS recommended)
+- **npm** ≥ 9 (or a compatible package manager)
+
+## Getting started
+
+Clone the repository, install dependencies, and start the dev server:
 
 ```bash
-# start project !!
+git clone <repository-url>
 cd architecture_draft
-
 npm install
-
 npm run dev
 ```
 
-Open the local URL shown in the terminal (default **http://localhost:5173**).
+The dev server prints a local URL (Vite default: **http://localhost:5173**). Open it in a browser.
 
-## Other scripts
+## npm scripts
 
-```bash
-npm run build    # production build
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite in development mode with HMR. |
+| `npm run build` | Production build to `dist/`. |
+| `npm run preview` | Serve the production build locally (run `build` first). |
 
-npm run preview  # serve the production build locally (run build first)
+## Repository layout
+
+```
+architecture_draft/
+├── index.html         # Vite entry HTML
+├── src/
+│   ├── app/           # Root app component
+│   ├── components/    # UI: flow canvas, controls, panels
+│   ├── data/          # Tab metadata and static config
+│   ├── engine/        # Simulation helpers
+│   ├── layout/        # Shell layout (tabs)
+│   ├── pages/         # One page per tab
+│   ├── store/         # Zustand stores
+│   └── styles/        # Global CSS
+└── content/           # Markdown narratives (optional reading)
 ```
 
-## Project layout
+## Extending the app
 
-- `src/app/` — App shell and tab-based navigation
-- `src/pages/` — Feature pages
-- `src/components/` — Flow canvas, toolbars, panels, etc.
-- `src/store/` — Zustand stores
-- `src/engine/` — Lightweight simulation logic
-- `content/page/` — Architecture narrative (`page4`, `page5`; aligned with Design Rationale & Engineering Practice tabs)
-- `content/dev/` — Build prompts and Page 1–3 implementation specs (developer material; see `content/README.md`)
+- **New or renamed tabs:** `src/data/tabs.js` and `src/layout/ShellLayout.jsx`
+- **Cursor automation (optional):** `.cursor/skills/distributed-simulator-dev/SKILL.md`
 
----
+## License
 
-To add a new tab or simulation, start from `src/data/tabs.js` and `src/layout/ShellLayout.jsx`.
+Private project (`"private": true` in `package.json`). Add a license file if you intend to open-source.

@@ -1,6 +1,6 @@
 # Page 4: Design rationale (integration engineer view)
 
-> **App navigation:** five tabs — (1) Transaction control · (2) Observability · (3) Traffic protection · (4) **Design Rationale** (this document’s themes: trust, contracts, SLOs, business framing — see in-app copy) · (5) **Engineering Practice** (implementation and load/DB detail; see `page5.md`).
+> **App navigation:** five tabs — (1) Transaction control · (2) Observability · (3) Traffic protection · (4) **Design Rationale** (this document’s themes: trust, contracts, SLOs, business framing — see in-app copy) · (5) **My Practice** (wiring, load, incidents; see `page5.md`).
 
 > Simulators 1–3 below are the **interactive core** that maps to consistency, observability, and survivability.
 
@@ -30,4 +30,4 @@ The three simulators turn these into **interactive architecture narratives**, no
 
 ## One-line summary
 
-**Transaction control** makes cross-system work **correct and recoverable**; **observability** makes incidents **visible and traceable**; **survivability governance** keeps the **core healthy under pressure and failure**. All three are required to move from ad hoc integrations to **reliable integration architecture**; the Design Rationale and Engineering Practice tabs spell out what sits around those three when you argue scope, trust, contracts, and concrete mechanisms.
+**Transaction control** makes cross-system work **correct and recoverable**; **observability** makes incidents **visible and traceable**; **survivability governance** keeps the **core healthy under pressure and failure**. All three are required to move from ad hoc integrations to **reliable integration architecture**; the Design Rationale and My Practice tabs spell out what sits around those three when you argue scope, trust, contracts, and concrete mechanisms.

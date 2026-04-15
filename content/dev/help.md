@@ -14,3 +14,7 @@ Requirements:
    - what failure mode it addresses
    - what architectural principle it demonstrates
 5. Keep this mode optional and unobtrusive.
+
+---
+
+**Status:** Not implemented in the shipped app (speaker-notes / presentation dock were removed as low value).

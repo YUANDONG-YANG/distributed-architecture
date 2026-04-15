@@ -1,75 +1,83 @@
-# Page 5: Engineering practice & implementation (distributed engineer view)
+# Page 5: Design philosophy & engineering practice (notes)
 
-> Simulators: Page 1 — Transaction control · Page 2 — Observability · Page 3 — Traffic protection · Page 4 — Design rationale. **This page** is the same story one notch closer to the metal: artifacts you maintain, where load meets the database, and how you’d explain a real incident.
+> Simulators: Page 1 — Transaction control · Page 2 — Observability · Page 3 — Traffic protection · Page 4 — Design rationale. This file mirrors tab 5 in the app: wiring, load, DB, and how to talk about incidents without fluff.
 
 ---
 
 ## Role of this page
 
-**Design Rationale** sketches the full picture. Page 5 is narrower: **which code paths and stores matter**, **how spikes and retries are shaped before rows**, and **how you walk through an outage** without stopping at vocabulary.
+**Design Rationale** is the wide shot. Here: which stores and code paths matter, how retries show up before rows, and how to walk through a bad rollout or outage with specifics.
 
 ---
 
 ## I · Mechanisms (aligned with each demo tab)
 
-Each section below matches a simulator tab. The second paragraph is the sort of answer you give when someone asks what you actually wired.
+Sections follow the simulators plus contracts and SLOs. Under each heading: short point, then implementation-ish detail you’d say in review.
 
 ### Transaction control
 
-Everyone says idempotency and compensation. The useful part is the wiring: which row moves, which log line is authoritative, and where a duplicate delivery stops.
+Idempotency and compensation are table stakes. The review argument is which row moves, which log line wins on replay, where duplicates stop.
 
-Guard illegal transitions with a **small state machine**; keep versions with **CAS or optimistic locks**; treat an append-only **process log** as the replay source; pair **outbox rows** with your publisher so publish order matches commit order; make consumers **idempotent on a business key**; wire **retry, then DLQ, then controlled replay** (plus manual steps when replay would lie about money).
+Small **state machine** for illegal transitions. Versions via **CAS / optimistic locks**. Append-only **process log** as replay source. **Outbox** tied to the publisher so commit and publish order match. Consumers **idempotent** on a business id. Path: **retry → DLQ → controlled replay**; manual steps when replay would falsify money.
 
 ### Observability
 
-Dashboards help after you know the slice. The hard bit is carrying the same identifiers through metrics, logs, and traces so half a path is still debuggable.
+Dashboards help after you know the slice. The grind is one request id end to end and a business key on logs/spans so you can stitch when a vendor drops trace context.
 
-Pick a **requestId** at the edge and refuse requests without it where you can; add a **business key** (order id, transfer ref) on log lines and span attributes; line up metric labels with those fields. When the partner drops your trace context, you can still stitch from alert → log → rough latency from metrics.
+**requestId** at the edge where realistic. **Business key** on log lines and span attrs; metric labels aligned. Trace gone? Alert → log → rough latency from metrics still works.
 
 ### Traffic protection
 
-“Protect the core” means nothing until you name the hop: gateway, queue, app pool, then database. If the DB is absorbing retries and spikes, the design already lost.
+“Protect the core” is fluff until you list gateway, queue, app pool, DB. DB eating retries means the design failed upstream.
 
-**Rate limit and validate cheaply** at the edge; scale out the stateless tier; use **bulkheads and breakers** so one bad dependency does not flatten the pool; keep a **degraded response path** (cached read, async ticket, static fallback) that caps how many synchronous writes hit the store during a storm.
+**Rate limit + validate** cheap at the edge. Scale stateless out. **Bulkheads and breakers** so one dep does not flatten the pool. **Degraded path** (cache, async ticket, static fallback) caps sync writes in a storm.
 
 ### Contract governance
 
-Backward compatible is a wish until you track who is on which schema and what happens when you tighten a field.
+“Backward compatible” is paper until you track schema revision per consumer and what breaks when you tighten a field.
 
-Ship **explicit API versions**; document additive-only rules for events and payloads; keep a small **matrix** (consumer × min version × known breakage). That is how you schedule a breaking change instead of discovering it in prod logs.
+**Explicit API versions**. Additive rules for events. Small **matrix**: consumer × min version × known breakage. Schedule breaks; do not discover them in prod logs only.
 
 ### SLO / capacity / chaos
 
-SLIs matter when they change behavior: freeze features, turn down traffic, or move headcount to the path that is actually burning error budget.
+SLIs matter when they change behavior: freeze scope, shed load, move people to the path burning budget.
 
-Measure **latency, success, freshness** on the paths you sell; size **headroom** against peak plus replay load; when the budget is gone, **throttle or stop shipping** non-critical work and put fixes for the hot path ahead of new scope.
+**Latency, success, freshness** on what you sell. **Headroom** for peak + replay. Budget gone: **throttle or stop** non-critical work; hot-path fixes before new scope.
 
 ---
 
 ## II · Concurrency & performance
 
-Governance slides rarely mention thread pools and partition hot spots. In practice those are what decide whether a spike becomes an outage.
+Slide decks skip pools and hot rows. Those decide spike vs outage.
 
-- **Database first:** pool size matched to what the CPU and locks can take; split hot rows or serialize contentious updates; cap statement time so one query cannot starve the pool; use replicas for read-heavy paths where stale reads are acceptable.
-- **Bursts:** let queues or buffers soak traffic that would otherwise open thousands of transactions at once; match admission at the edge to what the slowest hop can drain.
-- **App tier:** horizontal pods, shard-aware routing if data is partitioned; warm capacity before known events; session stickiness only when the session store demands it.
-- **Retries:** jitter and hard caps; breakers so you do not coordinate a thundering herd; idempotency keys so a retry is not a second payment; DLQ when you are not sure it is safe to try again.
-- **Off the synchronous path:** cache with a real invalidation story; hand work to MQ and batch writers; expose async APIs when the user can wait on a callback instead of holding a long HTTP transaction open.
+- **Database:** pool sized to CPU and locks; split or serialize hot rows; cap statement time; replicas where stale reads are OK.
+- **Bursts:** queues soak traffic that would open thousands of txs; edge admission matches slowest drain.
+- **App tier:** horizontal scale; shard-aware routing if partitioned; warm before known spikes; session stickiness only if required.
+- **Retries:** jitter, caps, breakers; idempotency keys; DLQ when replay is unsafe.
+- **Off sync path:** cache with invalidation; MQ and batch; async APIs when the client can wait on a callback.
 
 ---
 
 ## III · Ownership
 
-Abstract principles are easy to copy. What convinces people is a clear split of phases, keys, and failure handling—stated plainly.
+Buzzwords copy-paste. Useful is naming phases, keys, and who owns the ugly path.
 
-- I break cross-system work into **commit → outbox dispatch → idempotent apply → fix-up** (replay or compensate) and I name which store holds the truth at each step.
-- **requestId + business key** are non-optional in logs and traces on systems I own; I push vendors toward the same fields even when tracing breaks mid-flight.
-- I draw a line between **must succeed now** (sync, strong checks) and **can lag or degrade** (async fan-out, stale reads, canned responses when deps are down).
-- Traffic hits **cheap checks first**, then bounded pools and queues, and only then the transactional core—so the database is rarely the first thing that saturates.
-- Replay tooling, compensation hooks, and runbooks for the ugly cases ship together; I do not promise automated recovery for flows we would not safely re-drive.
+- Split work into **commit → outbox dispatch → idempotent apply → fix-up**; name the authoritative store each step.
+- **requestId + business key** on systems I own are mandatory in logs/traces; push vendors on the same fields when traces break.
+- Split **must work now** vs **can lag** (async, stale, canned when deps fail).
+- Order: **cheap checks**, pools/queues, then core. DB should not saturate first.
+- Replay, compensation, runbooks ship with the feature. No auto-recovery promises on flows I would not re-drive by hand.
 
 ---
 
 ## One-line summary
 
-Keep **Design Rationale** for breadth. Use **this page** when the conversation needs **names of mechanisms**, **honest load paths**, and **how you behaved on a real integration**.
+**Design Rationale** for breadth. This page for mechanism names, load paths that look like prod, and a straight story of what happened on a real integration.
+
+---
+
+## Afterword
+
+> When you run into an architecture problem and try to solve it with business-side levers alone, you have not fixed the underlying gap—you will keep stepping into pitfalls. If you have more thoughts, please reach out.
+
+**If you have more thoughts:** [Robin Yang](https://www.linkedin.com/in/yuandong-yang-robin/)

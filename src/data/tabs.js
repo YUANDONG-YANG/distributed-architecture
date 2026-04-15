@@ -38,9 +38,9 @@ export const TAB_META = {
   },
   engineering: {
     id: 'engineering',
-    shortLabel: 'Engineering Practice',
-    pageTitle: 'Engineering Practice & Implementation',
+    shortLabel: 'My Practice',
+    pageTitle: 'My Design Philosophy & Engineering Practice',
     pageSubtitle:
-      'Concrete mechanisms, where load hits the DB, and how you describe real delivery—not a glossary.',
+      'Notes on wiring, load, DB pressure, and explaining incidents without hand-waving.',
   },
 };

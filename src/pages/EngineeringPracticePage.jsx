@@ -1,8 +1,26 @@
+import { useCallback, useState } from 'react';
 import { TAB_META } from '../data/tabs.js';
 
 const meta = TAB_META.engineering;
 
+const RIPPLE_DURATION_MS = 700;
+
 export function EngineeringPracticePage() {
+  const [ripples, setRipples] = useState([]);
+
+  const onAfterwordLedePointerDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setRipples((prev) => [...prev, { id, x, y }]);
+    window.setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, RIPPLE_DURATION_MS);
+  }, []);
+
   return (
     <div className="rationale-page engineering-practice-page">
       <header className="rationale-page__header">
@@ -13,19 +31,18 @@ export function EngineeringPracticePage() {
       <div className="rationale-page__body">
         <div className="rationale-page__lede-wrap">
           <p className="rationale-page__lede">
-            <strong>Design Rationale</strong> sketches the full picture. This tab is narrower:{' '}
-            <strong>which artifacts you actually maintain</strong> (code paths, tables, queues),{' '}
-            <strong>where traffic and retries land before the database</strong>, and{' '}
-            <strong>how you’d explain a real outage or rollout</strong> without stopping at buzzwords.
+            <strong>Design Rationale</strong> is the wide shot. This page is the opposite: tables and queues I touch,
+            where retries show up before they hit rows, and how I actually explain a bad deploy or a partial outage to
+            someone who was not in the war room.
           </p>
         </div>
 
-        <section className="rationale-section rationale-section--surface">
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-business">
           <p className="rationale-section__eyebrow">I · Mechanisms</p>
-          <h2 className="rationale-section__title">Same themes as the demos, with file-level detail</h2>
+          <h2 className="rationale-section__title">Same demos as the app—more wiring detail</h2>
           <p>
-            Each block below matches a tab in the app. The second paragraph is the sort of answer you give
-            when someone asks “what did you use?”—not a recap of the slide title.
+            Blocks follow the three simulators plus contracts and SLOs. First blurb is the point; the paragraph under it
+            is the kind of detail I bring up when someone asks what shipped, not what the slide said.
           </p>
         </section>
 
@@ -34,46 +51,45 @@ export function EngineeringPracticePage() {
             <p className="rationale-section__eyebrow">Transaction simulator</p>
             <h2 className="rationale-section__title">Transaction control</h2>
             <p>
-              Everyone says idempotency and compensation. The useful part is the wiring: which row moves,
-              which log line is authoritative, and where a duplicate delivery stops.
+              Idempotency and compensation are table stakes. The part that matters in review is which row moves, which
+              log line wins on replay, and where a duplicate message dies.
             </p>
             <p className="engineering-landing">
-              Guard illegal transitions with a <strong>small state machine</strong>; keep versions with{' '}
-              <strong>CAS or optimistic locks</strong>; treat an append-only <strong>process log</strong> as
-              the replay source; pair <strong>outbox rows</strong> with your publisher so publish order matches
-              commit order; make consumers <strong>idempotent on a business key</strong>; wire{' '}
-              <strong>retry, then DLQ, then controlled replay</strong> (plus manual steps when replay would
-              lie about money).
+              Small <strong>state machine</strong> for illegal transitions. Versions via <strong>CAS / optimistic
+              locks</strong>. Append-only <strong>process log</strong> as replay source. <strong>Outbox</strong> tied to
+              the publisher so commit order and publish order line up. Consumers keyed for <strong>idempotency</strong>{' '}
+              on a business id. Path is <strong>retry → DLQ → controlled replay</strong>; manual steps stay in the
+              loop when replay would falsify money.
             </p>
           </section>
 
           <section className="rationale-section rationale-section--pillar rationale-section--pillar-contract">
             <p className="rationale-section__eyebrow">Observability</p>
-            <h2 className="rationale-section__title">Tracing that still works when a vendor goes dark</h2>
+            <h2 className="rationale-section__title">When half the trace is missing</h2>
             <p>
-              Dashboards help after you know the slice. The hard bit is carrying the same identifiers through
-              metrics, logs, and traces so half a path is still debuggable.
+              Dashboards help after you know which slice is on fire. The boring work is one <code>requestId</code> (or
+              equivalent) end to end, plus a business key on log lines and spans so you can stitch when a vendor drops
+              context.
             </p>
             <p className="engineering-landing">
-              Pick a <strong>requestId</strong> at the edge and refuse requests without it where you can;
-              add a <strong>business key</strong> (order id, transfer ref) on log lines and span attributes;
-              line up metric labels with those fields. When the partner drops your trace context, you can
-              still stitch from alert → log → rough latency from metrics.
+              Enforce <strong>requestId</strong> at the edge where it is realistic. Put the <strong>business key</strong>{' '}
+              on logs and span attrs; metric labels should line up. Partner lost your trace? You can still go alert → log
+              line → rough latency from metrics and not guess.
             </p>
           </section>
 
           <section className="rationale-section rationale-section--pillar rationale-section--pillar-security">
             <p className="rationale-section__eyebrow">Traffic protection</p>
-            <h2 className="rationale-section__title">Stopping junk before it becomes row locks</h2>
+            <h2 className="rationale-section__title">Name the hop</h2>
             <p>
-              “Protect the core” means nothing until you name the hop: gateway, queue, app pool, then
-              database. If the DB is absorbing retries and spikes, the design already lost.
+              “Protect the core” is fluff until you list gateway, queue, app pool, then DB. If the database is eating
+              your retries, the design already failed—usually earlier than people admit.
             </p>
             <p className="engineering-landing">
-              <strong>Rate limit and validate cheaply</strong> at the edge; scale out the stateless tier;
-              use <strong>bulkheads and breakers</strong> so one bad dependency does not flatten the pool;
-              keep a <strong>degraded response path</strong> (cached read, async ticket, static fallback)
-              that caps how many synchronous writes hit the store during a storm.
+              Cheap <strong>rate limit + validation</strong> at the edge. Stateless tier scales out.{' '}
+              <strong>Bulkheads and breakers</strong> so one dependency does not take the pool. Keep a{' '}
+              <strong>degraded path</strong> (cached read, async ticket, static fallback) so synchronous writes to the
+              store do not spike with every upstream wobble.
             </p>
           </section>
 
@@ -81,102 +97,130 @@ export function EngineeringPracticePage() {
             <p className="rationale-section__eyebrow">Contract governance</p>
             <h2 className="rationale-section__title">Many consumers, one producer</h2>
             <p>
-              Backward compatible is a wish until you track who is on which schema and what happens when you
+              “Backward compatible” is paper until you know who runs which schema revision and what breaks when you
               tighten a field.
             </p>
             <p className="engineering-landing">
-              Ship <strong>explicit API versions</strong>; document additive-only rules for events and
-              payloads; keep a small <strong>matrix</strong> (consumer × min version × known breakage). That
-              is how you schedule a breaking change instead of discovering it in prod logs.
+              <strong>Explicit API versions</strong>. Additive rules for events written down. A small{' '}
+              <strong>matrix</strong>: consumer × minimum version × known breakage. Then you can schedule a break
+              instead of reading about it in prod.
             </p>
           </section>
 
-          <section className="rationale-section rationale-section--pillar rationale-section--pillar-implementation">
+          <section className="rationale-section rationale-section--pillar rationale-section--pillar-capacity">
             <p className="rationale-section__eyebrow">SLO / capacity / chaos</p>
-            <h2 className="rationale-section__title">Budgets that change the queue order</h2>
+            <h2 className="rationale-section__title">When the budget bites</h2>
             <p>
-              SLIs matter when they change behavior: freeze features, turn down traffic, or move headcount to
-              the path that is actually burning error budget.
+              SLIs only matter if they change what ships: freeze scope, shed load, or move people onto the path that is
+              eating the budget.
             </p>
             <p className="engineering-landing">
-              Measure <strong>latency, success, freshness</strong> on the paths you sell; size{' '}
-              <strong>headroom</strong> against peak plus replay load; when the budget is gone,{' '}
-              <strong>throttle or stop shipping</strong> non-critical work and put fixes for the hot path
-              ahead of new scope.
+              Track <strong>latency, success, freshness</strong> on what you sell. Size <strong>headroom</strong> for
+              peak plus replay. Budget gone: <strong>throttle or stop</strong> non-critical work; hot-path fixes before
+              new features. No mystery there.
             </p>
           </section>
         </div>
 
-        <section className="rationale-section rationale-section--surface">
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-performance">
           <p className="rationale-section__eyebrow">II · Concurrency &amp; performance</p>
-          <h2 className="rationale-section__title">Load, retries, and the database</h2>
+          <h2 className="rationale-section__title">Load, retries, database</h2>
           <p>
-            Governance slides rarely mention thread pools and partition hot spots. In practice those are what
-            decide whether a spike becomes an outage.
+            Slide decks skip pool sizing and hot rows. In incidents those decide whether a spike becomes an outage.
           </p>
           <ul className="rationale-list">
             <li>
-              <strong>Database first</strong>: pool size matched to what the CPU and locks can take; split hot
-              rows or serialize contentious updates; cap statement time so one query cannot starve the pool;
-              use replicas for read-heavy paths where stale reads are acceptable.
+              <strong>Database</strong>: pool matches what CPU and locks can take; split or serialize hot rows; cap
+              statement time; read replicas only where stale is acceptable.
             </li>
             <li>
-              <strong>Bursts</strong>: let queues or buffers soak traffic that would otherwise open thousands
-              of transactions at once; match admission at the edge to what the slowest hop can drain.
+              <strong>Bursts</strong>: queues absorb what would otherwise open thousands of transactions at once;
+              admission at the edge should match what the slowest hop drains.
             </li>
             <li>
-              <strong>App tier</strong>: horizontal pods, shard-aware routing if data is partitioned; warm
-              capacity before known events; session stickiness only when the session store demands it.
+              <strong>App tier</strong>: horizontal scale; shard-aware routing if data is partitioned; warm capacity
+              before known spikes; stick sessions only if the store forces it.
             </li>
             <li>
-              <strong>Retries</strong>: jitter and hard caps; breakers so you do not coordinate a thundering
-              herd; idempotency keys so a retry is not a second payment; DLQ when you are not sure it is safe
-              to try again.
+              <strong>Retries</strong>: jitter, caps, breakers so you do not thunder the herd; idempotency keys so retry
+              is not a second payment; DLQ when replay is unsafe.
             </li>
             <li>
-              <strong>Off the synchronous path</strong>: cache with a real invalidation story; hand work to
-              MQ and batch writers; expose async APIs when the user can wait on a callback instead of holding
-              a long HTTP transaction open.
+              <strong>Off the sync path</strong>: cache with a real invalidation story; MQ and batch writers; async APIs
+              when the client can wait on a callback instead of a long held HTTP transaction.
             </li>
           </ul>
         </section>
 
-        <section className="rationale-section rationale-section--surface rationale-section--last">
+        <section className="rationale-section rationale-section--pillar rationale-section--pillar-ownership rationale-section--last">
           <p className="rationale-section__eyebrow">III · Ownership</p>
-          <h2 className="rationale-section__title">How I talk about my own work</h2>
+          <h2 className="rationale-section__title">What I actually say in a room</h2>
           <p>
-            Abstract principles are easy to copy. What convinces people is a clear split of phases, keys, and
-            failure handling—stated plainly.
+            Buzzwords copy-paste. Convincing is naming phases, keys, and who owns the ugly path—without the slide deck
+            voice.
           </p>
           <ul className="rationale-list">
             <li>
-              I break cross-system work into <strong>commit → outbox dispatch → idempotent apply → fix-up</strong>
-              (replay or compensate) and I name which store holds the truth at each step.
+              Cross-system work gets split into <strong>commit → outbox dispatch → idempotent apply → fix-up</strong>{' '}
+              (replay or compensate). Each step has a store that is source of truth; I say which one.
             </li>
             <li>
-              <strong>requestId + business key</strong> are non-optional in logs and traces on systems I own;
-              I push vendors toward the same fields even when tracing breaks mid-flight.
+              <strong>requestId + business key</strong> on systems I run are not optional in logs and traces. Vendors get
+              pushed on the same fields when traces break mid-flight.
             </li>
             <li>
-              I draw a line between <strong>must succeed now</strong> (sync, strong checks) and{' '}
-              <strong>can lag or degrade</strong> (async fan-out, stale reads, canned responses when deps are
-              down).
+              Clear split between <strong>must work now</strong> (sync, hard checks) and <strong>can lag</strong> (async,
+              stale read, canned response when a dep is down).
             </li>
             <li>
-              Traffic hits <strong>cheap checks first</strong>, then bounded pools and queues, and only then
-              the transactional core—so the database is rarely the first thing that saturates.
+              Traffic order: <strong>cheap checks</strong>, bounded pools and queues, then the transactional core. DB
+              saturation should not be the first symptom.
             </li>
             <li>
-              Replay tooling, compensation hooks, and runbooks for the ugly cases ship together; I do not
-              promise automated recovery for flows we would not safely re-drive.
+              Replay tooling, compensation hooks, and runbooks for the nasty cases ship with the feature. No promise of
+              auto-recovery on flows I would not re-drive by hand.
             </li>
           </ul>
           <p className="rationale-page__closing">
-            Keep <strong>Design Rationale</strong> for breadth. Use this tab when the conversation needs{' '}
-            <strong>names of mechanisms</strong>, <strong>honest load paths</strong>, and{' '}
-            <strong>how you behaved on a real integration</strong>.
+            Use <strong>Design Rationale</strong> for breadth. Use this tab when the discussion needs mechanism names,
+            load paths that match production, and a straight account of what happened on a real integration.
           </p>
         </section>
+
+        <aside className="engineering-afterword" aria-label="Closing note">
+          <div
+            className="engineering-afterword__lede-wrap"
+            onPointerDown={onAfterwordLedePointerDown}
+          >
+            <p className="engineering-afterword__lede">
+              <span className="engineering-afterword__lede-shimmer">
+                When you run into an architecture problem and try to solve it with business-side levers alone, you have
+                not fixed the underlying gap—you will keep stepping into pitfalls. If you have more thoughts, please
+                reach out.
+              </span>
+            </p>
+            {ripples.map((r) => (
+              <span
+                key={r.id}
+                className="engineering-afterword__ripple"
+                style={{ left: r.x, top: r.y }}
+                aria-hidden
+              />
+            ))}
+          </div>
+          <div className="engineering-afterword__contact">
+            <span className="engineering-afterword__hint">If you have more thoughts</span>
+            <a
+              className="engineering-afterword__link"
+              href="https://www.linkedin.com/in/yuandong-yang-robin/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="LinkedIn — https://www.linkedin.com/in/yuandong-yang-robin/"
+            >
+              Robin Yang
+            </a>
+          </div>
+        </aside>
       </div>
     </div>
   );
