@@ -6,13 +6,13 @@ Interactive web application for demonstrating distributed-systems concepts—tra
 
 The app is organized as a **single-page application** with a tabbed shell. Each tab targets a different theme:
 
-| Tab | Purpose |
-|-----|---------|
+| Tab                     | Purpose                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **Transaction Control** | Interactive flow (React Flow) simulating a transaction pipeline: local consistency, outbox, async paths, retries, DLQ, and manual replay. |
-| **Observability Loop** | Read-only narrative on metrics, tracing, logs, and recovery-oriented observability. |
-| **Traffic Protection** | Layered traffic simulation (ingress → gateway → service → breaker/DB) with metrics and outcome summaries. |
-| **Design Rationale** | Broader framing: security, contracts, SLOs, and communicating impact. |
-| **My Practice** | Author notes on wiring, load, DB pressure, and ownership (`content/page/page5.md`). |
+| **Observability Loop**  | Read-only narrative on metrics, tracing, logs, and recovery-oriented observability.                                                       |
+| **Traffic Protection**  | Layered traffic simulation (ingress → gateway → service → breaker/DB) with metrics and outcome summaries.                                 |
+| **Design Rationale**    | Broader framing: security, contracts, SLOs, and communicating impact.                                                                     |
+| **My Practice**         | Author notes on wiring, load, DB pressure, and ownership (`content/page/page5.md`).                                                       |
 
 Supporting architecture text lives under `content/`; it is reference material and is not required for `npm run build`.
 
@@ -44,10 +44,10 @@ The dev server prints a local URL (Vite default: **http://localhost:5173**). Ope
 
 ## npm scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite in development mode with HMR. |
-| `npm run build` | Production build to `dist/`. |
+| Command           | Description                                             |
+| ----------------- | ------------------------------------------------------- |
+| `npm run dev`     | Start Vite in development mode with HMR.                |
+| `npm run build`   | Production build to `dist/`.                            |
 | `npm run preview` | Serve the production build locally (run `build` first). |
 
 ## Repository layout
