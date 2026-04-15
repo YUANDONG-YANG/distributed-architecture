@@ -47,7 +47,8 @@ npm run preview  # serve the production build locally (run build first)
 - `src/components/` — Flow canvas, toolbars, panels, etc.
 - `src/store/` — Zustand stores
 - `src/engine/` — Lightweight simulation logic
-- `content/` — Architecture copy in Markdown (supporting material; not required for the build)
+- `content/page/` — Architecture narrative (`page4`, `page5`; aligned with Design Rationale & Engineering Practice tabs)
+- `content/dev/` — Build prompts and Page 1–3 implementation specs (developer material; see `content/README.md`)
 
 ---
 
